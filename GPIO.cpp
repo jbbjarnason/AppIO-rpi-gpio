@@ -7,7 +7,7 @@ GPIO::GPIO() :
         _ios(),
         _config(_app->getConfig()) {
     createDefaultConfigOnNoConfig();
-    if ( gpioInitialise() < 0 ) throw "Unable to initialize gpio";
+//    if ( gpioInitialise() < 0 ) throw "Unable to initialize gpio";
     createIOS();
 
 }
