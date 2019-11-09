@@ -5,7 +5,7 @@ using namespace std;
 GPIO::GPIO() :
         _app(AppIO::AppIO::instance()),
         _ios(),
-        _config(_app->getConfig()) {
+        _config(AppIO::Config::get()) {
     createDefaultConfigOnNoConfig();
 //    if ( gpioInitialise() < 0 ) throw "Unable to initialize gpio";
     createIOS();
@@ -37,7 +37,7 @@ void GPIO::createDefaultConfigOnNoConfig() {
                 {"GPIO20",  38},
                 {"GPIO21",  40},
         };
-        _app->updateConfigFile();
+        _config->update();
     }
 
 }
