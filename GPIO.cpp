@@ -1,48 +1,79 @@
 #include "GPIO.hpp"
+#include <AppIO/Config.hpp>
 
 using namespace std;
+using namespace AppIO;
 
 GPIO::GPIO() :
         _app(AppIO::AppIO::instance()),
         _ios(),
-        _config(_app->getConfig()) {
+        _config(Config::get()) {
     createDefaultConfigOnNoConfig();
-//    if ( gpioInitialise() < 0 ) throw "Unable to initialize gpio";
+    if ( gpioInitialise() < 0 ) throw "Unable to initialize gpio";
     createIOS();
 
+    gpioSetSignalFuncEx(SIGINT, GPIO::staticOnTerminate, this);
+    gpioSetSignalFuncEx(SIGTERM, GPIO::staticOnTerminate, this);
 }
 
 GPIO::~GPIO() {
+    std::cout << "AppIO is now destructing GPIO" << std::endl;
     gpioTerminate();
+    _config.reset();
+    _app.reset();
+    for (auto& [key, io] : _ios) {
+        io.reset();
+    }
 }
 
 void GPIO::createDefaultConfigOnNoConfig() {
+    int defaultDirection = int(Direction::INPUT);
     if (_config->find("ios") == _config->end()) {
         (*_config)["ios"] = {
-            //  BCM         BOARD
-                {"GPIO4",   7},
-                {"GPIO17",  11},
-                {"GPIO27",  13},
-                {"GPIO22",  15},
-                {"GPIO23",  16},
-                {"GPIO24",  18},
-                {"GPIO25",  22},
-                {"GPIO5",   29},
-                {"GPIO6",   31},
-                {"GPIO12",  32},
-                {"GPIO13",  33},
-                {"GPIO19",  35},
-                {"GPIO16",  36},
-                {"GPIO26",  37},
-                {"GPIO20",  38},
-                {"GPIO21",  40},
+                //  BCM   direction
+                {"GPIO4",  defaultDirection},
+                {"GPIO17", defaultDirection},
+                {"GPIO27", defaultDirection},
+                {"GPIO22", defaultDirection},
+                {"GPIO23", defaultDirection},
+                {"GPIO24", defaultDirection},
+                {"GPIO25", defaultDirection},
+                {"GPIO5",  defaultDirection},
+                {"GPIO6",  defaultDirection},
+                {"GPIO12", defaultDirection},
+                {"GPIO13", defaultDirection},
+                {"GPIO19", defaultDirection},
+                {"GPIO16", defaultDirection},
+                {"GPIO26", defaultDirection},
+                {"GPIO20", defaultDirection},
+                {"GPIO21", defaultDirection},
         };
-        _app->updateConfigFile();
+        _config->update();
     }
 
 }
 
 void GPIO::createIOS() {
-    for (auto& [key, value] : (*_config)["ios"].items())
-        _ios[key] = make_unique<IO>(value);
+    std::cout << "io dump " << (*_config)["ios"].dump() << std::endl;
+    for (auto&[key, value] : (*_config)["ios"].items()) {
+        std::cout << "creating io "<< key << " with direction " << int(value) << std::endl;
+        try {
+            _ios[key] = make_unique<IO>(key, value);
+        }
+        catch (const std::exception& exception) {
+            std::cout << "Got throw from IO" << exception.what() << std::endl;
+        }
+
+    }
+}
+
+void GPIO::staticOnTerminate(int signal, void *user) {
+    GPIO *mySelf = (GPIO *) user;
+
+    mySelf->onTerminate(signal); /* Call the instance callback. */
+}
+
+void GPIO::onTerminate(int signal) {
+    std::cout << "Received terminate from pigpio signal: " << signal << std::endl;
+    _app->getContext()->stop();
 }

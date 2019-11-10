@@ -5,10 +5,22 @@
 #include <AppIO/MessageCourier.hpp>
 #include <pigpio.h>
 
+namespace AppIO {
+
+enum class Direction {
+    OUTPUT=0,
+    INPUT=1
+};
+
+const std::map<Direction, std::string> directionToString = {
+    {Direction::OUTPUT, "Output"},
+    {Direction::INPUT, "Input"}
+};
+
 class IO {
 public:
-    IO(uint pinOnBoard);
-
+    IO(std::string pin, int direction);
+    ~IO();
 private:
     void setAsInput();
     void setAsOutput();
@@ -17,6 +29,10 @@ private:
     static void staticOnChange(int gpio, int level, uint32_t tick, void *user);
     void onChange(int gpio, int level, uint32_t tick);
 
-    uint _pinNr;
-    std::unique_ptr<AppIO::MessageCourier<bool>> _courier;
+    std::string _pin;
+    int _pinNr;
+    Direction _direction;
+    std::unique_ptr<MessageCourier<bool>> _courier;
 };
+
+}

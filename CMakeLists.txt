@@ -1,13 +1,15 @@
-cmake_minimum_required(VERSION 3.14)
-project(AppIO_rpi_gpio VERSION 0.1 DESCRIPTION "Raspberry pi IO over ZMQ")
+cmake_minimum_required(VERSION 3.9)
+project(AppIO_RPi_GPIO VERSION 0.1 DESCRIPTION "Raspberry pi IO over ZMQ")
 include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_REQUIRED_FLAGS -std=c++17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17 -pthread -lstdc++fs")
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17 -pthread -lstdc++fs -static-libgcc -static-libstdc++")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/config")
-find_package(Boost 1.48 COMPONENTS system date_time thread chrono regex random program_options REQUIRED)
+
+#set(BOOST_INCLUDEDIR /usr/lib/arm-linux-gnueabihf/include)
+#set(BOOST_LIBRARYDIR /usr/lib/arm-linux-gnueabihf/lib)
+find_package(Boost 1.65 COMPONENTS system date_time thread chrono regex random program_options REQUIRED)
 find_package(ZeroMQ 4.0 REQUIRED)
 find_package(Azmq 1.0 REQUIRED)
 find_package(pigpio REQUIRED)
@@ -20,9 +22,9 @@ include_directories(${Boost_INCLUDE_DIRS}
         ${Azmq_INCLUDE_DIRS}
         ${pigpio_INCLUDE_DIR})
 
-add_executable(AppIO_rpi_gpio main.cpp GPIO.cpp GPIO.hpp IO.cpp IO.hpp)
+add_executable(AppIO_RPi_GPIO main.cpp GPIO.cpp GPIO.hpp IO.cpp IO.hpp)
 
-target_link_libraries(AppIO_rpi_gpio ${Boost_LIBRARIES}
-        ${ZeroMQ_LIBRARIES}
+target_link_libraries(AppIO_RPi_GPIO ${Boost_LIBRARIES}
+        ${ZeroMQ_LIBRARY}
         ${Azmq_LIBRARIES}
         ${pigpio_LIBRARY})
